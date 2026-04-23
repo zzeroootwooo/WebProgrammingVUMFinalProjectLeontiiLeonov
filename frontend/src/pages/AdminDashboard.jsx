@@ -1,9 +1,9 @@
-import { Container, Typography } from '@mui/material';
+import { Container } from '../components/ui';
 
 function AdminDashboard() {
   return (
     <Container>
-      <Typography variant="h2">Admin Dashboard</Typography>
+      <h1>Admin Dashboard</h1>
     </Container>
   );
 }

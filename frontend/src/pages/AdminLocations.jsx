@@ -1,9 +1,9 @@
-import { Container, Typography } from '@mui/material';
+import { Container } from '../components/ui';
 
 function AdminLocations() {
   return (
     <Container>
-      <Typography variant="h2">Admin Locations</Typography>
+      <h1>Admin Locations</h1>
     </Container>
   );
 }

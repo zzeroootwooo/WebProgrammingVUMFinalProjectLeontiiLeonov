@@ -1,52 +1,35 @@
-import { useState } from 'react';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  IconButton,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  useTheme,
-  useMediaQuery,
-  Container,
-  Avatar,
-  Menu,
-  MenuItem,
-} from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import MenuIcon from '@mui/icons-material/Menu';
-import HotelIcon from '@mui/icons-material/Hotel';
-import PersonIcon from '@mui/icons-material/Person';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaHotel, FaBars, FaTimes, FaUser, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { Button, Container } from './ui';
+import './Navbar.css';
 
 function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
 
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location]);
 
   const handleLogout = () => {
     logout();
-    handleMenuClose();
+    setUserMenuOpen(false);
     navigate('/');
   };
 
@@ -66,231 +49,235 @@ function Navbar() {
     { label: 'All Reservations', path: '/admin/reservations' },
   ];
 
-  const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ p: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <HotelIcon /> Paradise Hotel
-      </Typography>
-      <List>
-        {publicLinks.map((link) => (
-          <ListItem key={link.path} disablePadding>
-            <ListItemButton component={RouterLink} to={link.path}>
-              <ListItemText primary={link.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-        {user && userLinks.map((link) => (
-          <ListItem key={link.path} disablePadding>
-            <ListItemButton component={RouterLink} to={link.path}>
-              <ListItemText primary={link.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-        {user?.role === 'admin' && adminLinks.map((link) => (
-          <ListItem key={link.path} disablePadding>
-            <ListItemButton component={RouterLink} to={link.path}>
-              <ListItemText primary={link.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-        {!user ? (
-          <>
-            <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/login">
-                <ListItemText primary="Login" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/register">
-                <ListItemText primary="Register" />
-              </ListItemButton>
-            </ListItem>
-          </>
-        ) : (
-          <ListItem disablePadding>
-            <ListItemButton onClick={handleLogout}>
-              <ListItemText primary="Logout" />
-            </ListItemButton>
-          </ListItem>
-        )}
-      </List>
-    </Box>
-  );
+  const isActivePath = (path) => location.pathname === path;
 
   return (
     <>
-      <AppBar position="sticky" color="default" elevation={0} sx={{ bgcolor: 'white', borderBottom: '1px solid', borderColor: 'divider' }}>
+      <motion.nav
+        className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ minHeight: { xs: 64, md: 70 } }}>
-            <Box
-              component={RouterLink}
-              to="/"
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                textDecoration: 'none',
-                color: 'inherit',
-                mr: 'auto',
-              }}
-            >
-              <HotelIcon sx={{ fontSize: { xs: 28, md: 32 }, color: 'primary.main' }} />
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 800,
-                  fontSize: { xs: '1.1rem', md: '1.3rem' },
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Paradise Hotel
-              </Typography>
-            </Box>
+          <div className="navbar-content">
+            {/* Logo */}
+            <Link to="/" className="navbar-logo">
+              <FaHotel className="navbar-logo-icon" />
+              <span className="navbar-logo-text">Paradise Hotel</span>
+            </Link>
 
-            {isMobile ? (
-              <IconButton
-                color="inherit"
-                edge="end"
-                onClick={handleDrawerToggle}
-                sx={{ ml: 1 }}
-              >
-                <MenuIcon />
-              </IconButton>
-            ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {publicLinks.map((link) => (
+            {/* Desktop Navigation */}
+            <div className="navbar-links desktop">
+              {publicLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`navbar-link ${isActivePath(link.path) ? 'active' : ''}`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              {user && user.role !== 'admin' && userLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`navbar-link ${isActivePath(link.path) ? 'active' : ''}`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              {user?.role === 'admin' && adminLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`navbar-link ${isActivePath(link.path) ? 'active' : ''}`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Auth Buttons / User Menu */}
+            <div className="navbar-actions desktop">
+              {user ? (
+                <div className="navbar-user-menu">
+                  <motion.button
+                    className="navbar-user-button"
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <div className="navbar-avatar">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="navbar-user-name">{user.name}</span>
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {userMenuOpen && (
+                      <>
+                        <div
+                          className="navbar-menu-overlay"
+                          onClick={() => setUserMenuOpen(false)}
+                        />
+                        <motion.div
+                          className="navbar-dropdown"
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="navbar-dropdown-header">
+                            <p className="navbar-dropdown-name">{user.name}</p>
+                            <p className="navbar-dropdown-email">{user.email}</p>
+                          </div>
+                          <button
+                            className="navbar-dropdown-item logout"
+                            onClick={handleLogout}
+                          >
+                            <FaSignOutAlt />
+                            <span>Logout</span>
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <div className="navbar-auth-buttons">
                   <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/login')}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={<FaUser />}
+                    onClick={() => navigate('/register')}
+                  >
+                    Register
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="navbar-mobile-toggle mobile"
+              onClick={() => setMobileOpen(!mobileOpen)}
+            >
+              {mobileOpen ? <FaTimes /> : <FaBars />}
+            </button>
+          </div>
+        </Container>
+      </motion.nav>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              className="navbar-drawer-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.div
+              className="navbar-drawer"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'tween', duration: 0.3 }}
+            >
+              <div className="navbar-drawer-header">
+                <FaHotel className="navbar-drawer-icon" />
+                <span>Paradise Hotel</span>
+              </div>
+
+              <div className="navbar-drawer-links">
+                {publicLinks.map((link) => (
+                  <Link
                     key={link.path}
-                    component={RouterLink}
                     to={link.path}
-                    color="inherit"
-                    sx={{
-                      fontWeight: 500,
-                      color: 'text.secondary',
-                      '&:hover': {
-                        color: 'primary.main',
-                        bgcolor: 'rgba(59, 130, 246, 0.08)',
-                      },
-                    }}
+                    className={`navbar-drawer-link ${isActivePath(link.path) ? 'active' : ''}`}
                   >
                     {link.label}
-                  </Button>
+                  </Link>
                 ))}
 
+                {user && user.role !== 'admin' && userLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={`navbar-drawer-link ${isActivePath(link.path) ? 'active' : ''}`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+
+                {user?.role === 'admin' && adminLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={`navbar-drawer-link ${isActivePath(link.path) ? 'active' : ''}`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="navbar-drawer-footer">
                 {user ? (
                   <>
-                    {user.role !== 'admin' && userLinks.map((link) => (
-                      <Button
-                        key={link.path}
-                        component={RouterLink}
-                        to={link.path}
-                        color="inherit"
-                        sx={{
-                          fontWeight: 500,
-                          color: 'text.secondary',
-                          '&:hover': {
-                            color: 'primary.main',
-                            bgcolor: 'rgba(59, 130, 246, 0.08)',
-                          },
-                        }}
-                      >
-                        {link.label}
-                      </Button>
-                    ))}
-
-                    {user.role === 'admin' && adminLinks.map((link) => (
-                      <Button
-                        key={link.path}
-                        component={RouterLink}
-                        to={link.path}
-                        color="inherit"
-                        sx={{
-                          fontWeight: 500,
-                          color: 'text.secondary',
-                          '&:hover': {
-                            color: 'primary.main',
-                            bgcolor: 'rgba(59, 130, 246, 0.08)',
-                          },
-                        }}
-                      >
-                        {link.label}
-                      </Button>
-                    ))}
-
-                    <IconButton onClick={handleMenuOpen} sx={{ ml: 1 }}>
-                      <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main', fontSize: '1rem' }}>
+                    <div className="navbar-drawer-user">
+                      <div className="navbar-avatar small">
                         {user.name.charAt(0).toUpperCase()}
-                      </Avatar>
-                    </IconButton>
-                    <Menu
-                      anchorEl={anchorEl}
-                      open={Boolean(anchorEl)}
-                      onClose={handleMenuClose}
-                      transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                      anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                      </div>
+                      <div>
+                        <p className="navbar-drawer-user-name">{user.name}</p>
+                        <p className="navbar-drawer-user-email">{user.email}</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="danger"
+                      fullWidth
+                      icon={<FaSignOutAlt />}
+                      onClick={handleLogout}
                     >
-                      <MenuItem disabled sx={{ opacity: '1 !important' }}>
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight={600}>
-                            {user.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {user.email}
-                          </Typography>
-                        </Box>
-                      </MenuItem>
-                      <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
-                        Logout
-                      </MenuItem>
-                    </Menu>
+                      Logout
+                    </Button>
                   </>
                 ) : (
-                  <>
+                  <div className="navbar-drawer-auth">
                     <Button
-                      component={RouterLink}
-                      to="/login"
-                      color="inherit"
-                      sx={{
-                        fontWeight: 500,
-                        color: 'text.secondary',
-                        '&:hover': {
-                          color: 'primary.main',
-                          bgcolor: 'rgba(59, 130, 246, 0.08)',
-                        },
-                      }}
+                      variant="outline"
+                      fullWidth
+                      onClick={() => navigate('/login')}
                     >
                       Login
                     </Button>
                     <Button
-                      component={RouterLink}
-                      to="/register"
-                      variant="contained"
-                      startIcon={<PersonIcon />}
-                      sx={{ ml: 1 }}
+                      variant="primary"
+                      fullWidth
+                      icon={<FaUser />}
+                      onClick={() => navigate('/register')}
                     >
                       Register
                     </Button>
-                  </>
+                  </div>
                 )}
-              </Box>
-            )}
-          </Toolbar>
-        </Container>
-      </AppBar>
-
-      <Drawer
-        anchor="right"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
-        sx={{
-          '& .MuiDrawer-paper': { width: 280 },
-        }}
-      >
-        {drawer}
-      </Drawer>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }

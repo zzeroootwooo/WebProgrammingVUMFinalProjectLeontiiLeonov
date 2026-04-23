@@ -1,0 +1,147 @@
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-full {
+  width: 100%;
+}
+
+.input-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.input-required {
+  color: var(--error);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--glass-shadow);
+  transition: all var(--transition-base);
+  outline: none;
+}
+
+.input-field::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.input-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1),
+              var(--glass-shadow);
+}
+
+.input-field:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* With icons */
+.input-with-icon-left {
+  padding-left: 2.75rem;
+}
+
+.input-with-icon-right {
+  padding-right: 2.75rem;
+}
+
+.input-icon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.input-icon-left {
+  left: 0.75rem;
+}
+
+.input-icon-right {
+  right: 0.75rem;
+}
+
+/* Error state */
+.input-error {
+  border-color: var(--error);
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1),
+              var(--glass-shadow);
+}
+
+/* Disabled state */
+.input-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Helper text */
+.input-helper {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.input-helper-error {
+  color: var(--error);
+}
+
+/* Date input specific styles */
+.input-field[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.6);
+  transition: filter var(--transition-fast);
+}
+
+.input-field[type='date']::-webkit-calendar-picker-indicator:hover {
+  filter: invert(0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  .input-field[type='date']::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+  }
+
+  .input-field[type='date']::-webkit-calendar-picker-indicator:hover {
+    filter: invert(1);
+  }
+}
+
+/* Number input arrows */
+.input-field[type='number']::-webkit-inner-spin-button,
+.input-field[type='number']::-webkit-outer-spin-button {
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
+}
+
+.input-field[type='number']:hover::-webkit-inner-spin-button,
+.input-field[type='number']:hover::-webkit-outer-spin-button {
+  opacity: 1;
+}

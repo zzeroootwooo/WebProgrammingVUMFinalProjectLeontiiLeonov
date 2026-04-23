@@ -1,0 +1,71 @@
+.card {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+/* Variants */
+.card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.card-solid {
+  background: var(--bg-primary);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+}
+
+.card-outlined {
+  background: transparent;
+  border: 2px solid var(--glass-border);
+}
+
+/* Hoverable */
+.card-hoverable {
+  cursor: default;
+}
+
+.card-hoverable:hover {
+  box-shadow: 0 16px 50px 0 rgba(31, 38, 135, 0.25);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Clickable */
+.card-clickable {
+  cursor: pointer;
+}
+
+.card-clickable:active {
+  transform: scale(0.98);
+}
+
+/* Card sections */
+.card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card-header,
+  .card-body,
+  .card-footer {
+    padding: 1rem;
+  }
+}

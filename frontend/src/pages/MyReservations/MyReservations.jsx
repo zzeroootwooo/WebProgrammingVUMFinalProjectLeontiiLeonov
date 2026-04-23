@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Container, Card, Button, Alert, Badge, Grid, Modal } from '../components/ui';
-import { reservationService } from '../services/reservationService';
+import { Container, Card, Button, Alert, Badge, Grid, Modal } from '../../components/ui';
+import { reservationService } from '../../services/reservationService';
 import './MyReservations.css';
 
 function MyReservations() {

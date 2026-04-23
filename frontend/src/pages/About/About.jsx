@@ -1,4 +1,4 @@
-import { Container, Card } from '../components/ui';
+import { Container, Card } from '../../components/ui';
 import { motion } from 'framer-motion';
 import './About.css';
 

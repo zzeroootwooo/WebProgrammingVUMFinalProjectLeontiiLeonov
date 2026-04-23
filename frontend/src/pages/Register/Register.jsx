@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
-import { Container, Button, Input, Alert, Card } from '../components/ui';
-import { useAuth } from '../context/AuthContext';
+import { Container, Button, Input, Alert, Card } from '../../components/ui';
+import { useAuth } from '../../context/AuthContext';
 import './Register.css';
 
 function Register() {

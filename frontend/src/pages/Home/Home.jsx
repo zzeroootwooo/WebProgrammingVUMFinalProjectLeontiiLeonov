@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaSearch, FaStar, FaParking, FaSpa, FaClock, FaCheckCircle } from 'react-icons/fa';
-import { Container, Button, Card, Grid } from '../components/ui';
+import { Container, Button, Card, Grid } from '../../components/ui';
 import './Home.css';
 
 function Home() {

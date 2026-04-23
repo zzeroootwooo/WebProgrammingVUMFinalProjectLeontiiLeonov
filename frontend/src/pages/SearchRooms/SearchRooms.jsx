@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaSearch, FaParking, FaSpa } from 'react-icons/fa';
-import { Container, Card, Button, Input, Checkbox, Alert, Grid, Modal } from '../components/ui';
-import { locationService } from '../services/locationService';
-import { reservationService } from '../services/reservationService';
+import { Container, Card, Button, Input, Checkbox, Alert, Grid, Modal } from '../../components/ui';
+import { locationService } from '../../services/locationService';
+import { reservationService } from '../../services/reservationService';
 import './SearchRooms.css';
 
 function SearchRooms() {

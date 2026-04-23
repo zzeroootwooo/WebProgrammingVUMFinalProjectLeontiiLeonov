@@ -1,4 +1,4 @@
-import { Container } from '../components/ui';
+import { Container } from '../../components/ui';
 
 function AdminLocations() {
   return (

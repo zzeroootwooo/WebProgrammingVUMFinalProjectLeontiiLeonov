@@ -11,6 +11,9 @@ function SearchRooms() {
     checkIn: '',
     checkOut: '',
     guests: 1,
+    search: '',
+    city: '',
+    rating: '',
     freeParking: false,
     wellnessCenter: false,
   });
@@ -43,6 +46,9 @@ function SearchRooms() {
           checkIn: searchParams.checkIn,
           checkOut: searchParams.checkOut,
           guests: searchParams.guests,
+          search: searchParams.search || undefined,
+          city: searchParams.city || undefined,
+          rating: searchParams.rating || undefined,
           freeParking: searchParams.freeParking || undefined,
           wellnessCenter: searchParams.wellnessCenter || undefined,
         }
@@ -111,7 +117,7 @@ function SearchRooms() {
 
         <Card variant="glass" className="search-card">
           <Card.Body>
-            <Grid cols={4} gap={3}>
+            <Grid cols={3} gap={3}>
               <Input
                 label="Check-in"
                 type="date"
@@ -139,21 +145,51 @@ function SearchRooms() {
                 fullWidth
                 min="1"
               />
-              <div className="checkbox-group">
-                <Checkbox
-                  label="Free Parking"
-                  name="freeParking"
-                  checked={searchParams.freeParking}
-                  onChange={handleInputChange}
-                />
-                <Checkbox
-                  label="Wellness Center"
-                  name="wellnessCenter"
-                  checked={searchParams.wellnessCenter}
-                  onChange={handleInputChange}
-                />
-              </div>
+              <Input
+                label="Hotel Name"
+                type="text"
+                name="search"
+                value={searchParams.search}
+                onChange={handleInputChange}
+                placeholder="Search by hotel name..."
+                fullWidth
+              />
+              <Input
+                label="City"
+                type="text"
+                name="city"
+                value={searchParams.city}
+                onChange={handleInputChange}
+                placeholder="Filter by city..."
+                fullWidth
+              />
+              <Input
+                label="Minimum Rating"
+                type="number"
+                name="rating"
+                value={searchParams.rating}
+                onChange={handleInputChange}
+                placeholder="e.g. 4.5"
+                fullWidth
+                min="1"
+                max="5"
+                step="0.1"
+              />
             </Grid>
+            <div className="amenities-filters">
+              <Checkbox
+                label="Free Parking"
+                name="freeParking"
+                checked={searchParams.freeParking}
+                onChange={handleInputChange}
+              />
+              <Checkbox
+                label="Wellness Center"
+                name="wellnessCenter"
+                checked={searchParams.wellnessCenter}
+                onChange={handleInputChange}
+              />
+            </div>
             <div className="search-button-container">
               <Button
                 variant="primary"

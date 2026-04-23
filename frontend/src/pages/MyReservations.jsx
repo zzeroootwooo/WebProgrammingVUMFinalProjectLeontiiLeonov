@@ -1,20 +1,8 @@
 import { useState, useEffect } from 'react';
-import {
-  Container,
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  Grid,
-  Chip,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
+import { motion } from 'framer-motion';
+import { Container, Card, Button, Alert, Badge, Grid, Modal } from '../components/ui';
 import { reservationService } from '../services/reservationService';
+import './MyReservations.css';
 
 function MyReservations() {
   const [reservations, setReservations] = useState([]);
@@ -62,112 +50,107 @@ function MyReservations() {
   if (loading) {
     return (
       <Container>
-        <Box sx={{ my: 4 }}>
-          <Typography>Loading reservations...</Typography>
-        </Box>
+        <div className="loading-state">
+          <div className="skeleton skeleton-title"></div>
+          <div className="skeleton skeleton-card"></div>
+          <div className="skeleton skeleton-card"></div>
+        </div>
       </Container>
     );
   }
 
   return (
     <Container>
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          My Reservations
-        </Typography>
+      <motion.div
+        className="my-reservations-page"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1 className="page-title">My Reservations</h1>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert type="error" onClose={() => setError('')}>
             {error}
           </Alert>
         )}
 
         {reservations.length === 0 ? (
-          <Typography variant="body1" color="text.secondary">
-            You don't have any reservations yet.
-          </Typography>
+          <Card variant="glass">
+            <Card.Body>
+              <p className="empty-state">You don't have any reservations yet.</p>
+            </Card.Body>
+          </Card>
         ) : (
-          <Grid container spacing={3}>
+          <Grid cols={2} gap={4}>
             {reservations.map((reservation) => (
-              <Grid item xs={12} md={6} key={reservation.id}>
-                <Card elevation={3}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography variant="h6">{reservation.roomName}</Typography>
-                      <Chip
-                        label={reservation.status}
-                        color={reservation.status === 'active' ? 'success' : 'default'}
-                        size="small"
-                      />
-                    </Box>
-
-                    <Typography variant="subtitle1" color="primary" gutterBottom>
-                      {reservation.locationName}
-                    </Typography>
-
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {reservation.locationCity}
-                    </Typography>
-
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body2">
-                        <strong>Room Type:</strong> {reservation.roomType}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Check-in:</strong> {reservation.checkIn}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Check-out:</strong> {reservation.checkOut}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Guests:</strong> {reservation.guests}
-                      </Typography>
-                    </Box>
-
+              <motion.div
+                key={reservation.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card variant="glass" hoverable>
+                  <Card.Body>
+                    <div className="reservation-header">
+                      <h3>{reservation.roomName}</h3>
+                      <Badge variant={reservation.status === 'active' ? 'success' : 'default'}>
+                        {reservation.status}
+                      </Badge>
+                    </div>
+                    <div className="reservation-details">
+                      <p><strong>Check-in:</strong> {reservation.checkIn}</p>
+                      <p><strong>Check-out:</strong> {reservation.checkOut}</p>
+                      <p><strong>Guests:</strong> {reservation.guests}</p>
+                      <p><strong>Total Price:</strong> ${reservation.totalPrice}</p>
+                    </div>
+                  </Card.Body>
+                  <Card.Footer>
                     {reservation.status === 'active' && (
-                      <Box sx={{ mt: 2 }}>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          onClick={() => handleCancelClick(reservation)}
-                        >
-                          Cancel Reservation
-                        </Button>
-                      </Box>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleCancelClick(reservation)}
+                      >
+                        Cancel Reservation
+                      </Button>
                     )}
-                  </CardContent>
+                  </Card.Footer>
                 </Card>
-              </Grid>
+              </motion.div>
             ))}
           </Grid>
         )}
-      </Box>
 
-      <Dialog open={cancelDialog} onClose={() => setCancelDialog(false)}>
-        <DialogTitle>Cancel Reservation</DialogTitle>
-        <DialogContent>
+        <Modal
+          isOpen={cancelDialog}
+          onClose={() => setCancelDialog(false)}
+          title="Cancel Reservation"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setCancelDialog(false)}>
+                Keep Reservation
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleConfirmCancel}
+                loading={cancelLoading}
+                disabled={cancelLoading}
+              >
+                {cancelLoading ? 'Cancelling...' : 'Yes, Cancel'}
+              </Button>
+            </>
+          }
+        >
+          <p>Are you sure you want to cancel this reservation?</p>
           {selectedReservation && (
-            <Typography>
-              Are you sure you want to cancel your reservation for {selectedReservation.roomName} at{' '}
-              {selectedReservation.locationName}?
-            </Typography>
+            <div className="cancel-dialog-details">
+              <p><strong>Room:</strong> {selectedReservation.roomName}</p>
+              <p><strong>Dates:</strong> {selectedReservation.checkIn} - {selectedReservation.checkOut}</p>
+            </div>
           )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCancelDialog(false)} disabled={cancelLoading}>
-            No, Keep It
-          </Button>
-          <Button
-            onClick={handleConfirmCancel}
-            variant="contained"
-            color="error"
-            disabled={cancelLoading}
-          >
-            {cancelLoading ? 'Cancelling...' : 'Yes, Cancel'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Modal>
+      </motion.div>
     </Container>
   );
 }

@@ -1,330 +1,304 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Container,
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Checkbox,
-  FormControlLabel,
-  Alert,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { FaSearch, FaParking, FaSpa } from 'react-icons/fa';
+import { Container, Card, Button, Input, Checkbox, Alert, Grid, Modal } from '../components/ui';
 import { locationService } from '../services/locationService';
 import { reservationService } from '../services/reservationService';
-import { useAuth } from '../context/AuthContext';
+import './SearchRooms.css';
 
 function SearchRooms() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [searchParams, setSearchParams] = useState({
     checkIn: '',
     checkOut: '',
     guests: 1,
-    search: '',
+    hotelName: '',
     city: '',
-    rating: '',
+    minRating: '',
     freeParking: false,
     wellnessCenter: false,
   });
-  const [rooms, setRooms] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [filteredLocations, setFilteredLocations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [selectedRoom, setSelectedRoom] = useState(null);
   const [bookingDialog, setBookingDialog] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value, checked, type } = e.target;
-    setSearchParams((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
+  useEffect(() => {
+    fetchLocations();
+  }, []);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!searchParams.checkIn || !searchParams.checkOut) {
-      setError('Please select check-in and check-out dates');
-      return;
-    }
-
-    if (searchParams.checkIn >= searchParams.checkOut) {
-      setError('Check-out date must be after check-in date');
-      return;
-    }
-
+  const fetchLocations = async () => {
     setLoading(true);
     try {
-      const data = await locationService.searchRooms(searchParams);
-      setRooms(data.rooms || []);
+      const data = await locationService.getAllLocations();
+      setLocations(data.locations || []);
+      setFilteredLocations(data.locations || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to search rooms');
+      setError(err.response?.data?.message || 'Failed to load rooms');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBookRoom = (room) => {
-    if (!user) {
-      navigate('/login');
-      return;
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchParams((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (name) => {
+    setSearchParams((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
+
+  const handleSearch = () => {
+    let filtered = [...locations];
+
+    if (searchParams.hotelName) {
+      filtered = filtered.filter((loc) =>
+        loc.name.toLowerCase().includes(searchParams.hotelName.toLowerCase())
+      );
     }
-    setSelectedRoom(room);
+
+    if (searchParams.city) {
+      filtered = filtered.filter((loc) =>
+        loc.city.toLowerCase().includes(searchParams.city.toLowerCase())
+      );
+    }
+
+    if (searchParams.minRating) {
+      filtered = filtered.filter((loc) => loc.rating >= parseFloat(searchParams.minRating));
+    }
+
+    if (searchParams.freeParking) {
+      filtered = filtered.filter((loc) => loc.freeParking);
+    }
+
+    if (searchParams.wellnessCenter) {
+      filtered = filtered.filter((loc) => loc.wellnessCenter);
+    }
+
+    setFilteredLocations(filtered);
+  };
+
+  const handleBooking = (location) => {
+    setSelectedLocation(location);
     setBookingDialog(true);
   };
 
-  const handleConfirmBooking = async () => {
+  const confirmBooking = async () => {
+    if (!searchParams.checkIn || !searchParams.checkOut) {
+      setError('Please select check-in and check-out dates');
+      return;
+    }
+
     setBookingLoading(true);
     try {
       await reservationService.createReservation({
-        roomId: selectedRoom.id,
+        locationId: selectedLocation.id,
         checkIn: searchParams.checkIn,
         checkOut: searchParams.checkOut,
-        guests: parseInt(searchParams.guests),
+        guests: searchParams.guests,
       });
       setBookingDialog(false);
-      navigate('/my-reservations');
+      setError('');
+      alert('Reservation created successfully!');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create reservation');
-      setBookingDialog(false);
     } finally {
       setBookingLoading(false);
     }
   };
 
-  const calculateNights = () => {
-    if (searchParams.checkIn && searchParams.checkOut) {
-      const start = new Date(searchParams.checkIn);
-      const end = new Date(searchParams.checkOut);
-      return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    }
-    return 0;
-  };
-
-  const getTotalPrice = (pricePerNight) => {
-    return pricePerNight * calculateNights();
-  };
-
   return (
     <Container>
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Search Available Rooms
-        </Typography>
-
-        <Box component="form" onSubmit={handleSearch} sx={{ mb: 4 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                label="Check-in"
-                type="date"
-                name="checkIn"
-                value={searchParams.checkIn}
-                onChange={handleChange}
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                label="Check-out"
-                type="date"
-                name="checkOut"
-                value={searchParams.checkOut}
-                onChange={handleChange}
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                label="Guests"
-                type="number"
-                name="guests"
-                value={searchParams.guests}
-                onChange={handleChange}
-                inputProps={{ min: 1 }}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                label="Hotel Name"
-                name="search"
-                value={searchParams.search}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                label="City"
-                name="city"
-                value={searchParams.city}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                label="Min Rating"
-                type="number"
-                name="rating"
-                value={searchParams.rating}
-                onChange={handleChange}
-                inputProps={{ min: 0, max: 5, step: 0.1 }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="freeParking"
-                    checked={searchParams.freeParking}
-                    onChange={handleChange}
-                  />
-                }
-                label="Free Parking"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="wellnessCenter"
-                    checked={searchParams.wellnessCenter}
-                    onChange={handleChange}
-                  />
-                }
-                label="Wellness Center"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Button type="submit" variant="contained" size="large" disabled={loading}>
-                {loading ? 'Searching...' : 'Search'}
-              </Button>
-            </Grid>
-          </Grid>
-        </Box>
+      <motion.div
+        className="search-rooms-page"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1 className="page-title">Search Rooms</h1>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert type="error" onClose={() => setError('')}>
             {error}
           </Alert>
         )}
 
-        {rooms.length === 0 && !loading && (
-          <Typography variant="body1" color="text.secondary">
-            No rooms found. Try adjusting your search criteria.
-          </Typography>
+        <Card variant="glass" className="search-card">
+          <Card.Body>
+            <Grid cols={4} gap={3}>
+              <Input
+                label="Check-in"
+                type="date"
+                name="checkIn"
+                value={searchParams.checkIn}
+                onChange={handleInputChange}
+                fullWidth
+              />
+              <Input
+                label="Check-out"
+                type="date"
+                name="checkOut"
+                value={searchParams.checkOut}
+                onChange={handleInputChange}
+                fullWidth
+              />
+              <Input
+                label="Guests"
+                type="number"
+                name="guests"
+                value={searchParams.guests}
+                onChange={handleInputChange}
+                fullWidth
+                min="1"
+              />
+              <Input
+                label="Hotel Name"
+                type="text"
+                name="hotelName"
+                value={searchParams.hotelName}
+                onChange={handleInputChange}
+                placeholder="Search by name"
+                fullWidth
+              />
+              <Input
+                label="City"
+                type="text"
+                name="city"
+                value={searchParams.city}
+                onChange={handleInputChange}
+                placeholder="Search by city"
+                fullWidth
+              />
+              <Input
+                label="Min Rating"
+                type="number"
+                name="minRating"
+                value={searchParams.minRating}
+                onChange={handleInputChange}
+                placeholder="0-5"
+                fullWidth
+                min="0"
+                max="5"
+                step="0.1"
+              />
+              <div className="checkbox-group">
+                <Checkbox
+                  label="Free Parking"
+                  checked={searchParams.freeParking}
+                  onChange={() => handleCheckboxChange('freeParking')}
+                />
+                <Checkbox
+                  label="Wellness Center"
+                  checked={searchParams.wellnessCenter}
+                  onChange={() => handleCheckboxChange('wellnessCenter')}
+                />
+              </div>
+              <div className="search-button-wrapper">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  icon={<FaSearch />}
+                  onClick={handleSearch}
+                  fullWidth
+                >
+                  Search
+                </Button>
+              </div>
+            </Grid>
+          </Card.Body>
+        </Card>
+
+        {loading ? (
+          <div className="loading-state">
+            <div className="skeleton skeleton-card"></div>
+            <div className="skeleton skeleton-card"></div>
+          </div>
+        ) : (
+          <Grid cols={3} gap={4} className="results-grid">
+            {filteredLocations.map((location) => (
+              <motion.div
+                key={location.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card variant="glass" hoverable>
+                  <Card.Body>
+                    <h3 className="location-name">{location.name}</h3>
+                    <p className="location-city">{location.city}</p>
+                    <div className="location-details">
+                      <p><strong>Rating:</strong> ⭐ {location.rating}</p>
+                      <p><strong>Price:</strong> ${location.pricePerNight}/night</p>
+                    </div>
+                    <div className="location-amenities">
+                      {location.freeParking && (
+                        <span className="amenity"><FaParking /> Parking</span>
+                      )}
+                      {location.wellnessCenter && (
+                        <span className="amenity"><FaSpa /> Wellness</span>
+                      )}
+                    </div>
+                  </Card.Body>
+                  <Card.Footer>
+                    <Button
+                      variant="primary"
+                      fullWidth
+                      onClick={() => handleBooking(location)}
+                    >
+                      Book Now
+                    </Button>
+                  </Card.Footer>
+                </Card>
+              </motion.div>
+            ))}
+          </Grid>
         )}
 
-        <Grid container spacing={3}>
-          {rooms.map((room) => (
-            <Grid item xs={12} md={6} key={room.id}>
-              <Card elevation={3}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    {room.name}
-                  </Typography>
-                  <Typography variant="subtitle1" color="primary" gutterBottom>
-                    {room.location.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {room.location.city}, {room.location.address}
-                  </Typography>
-                  <Box sx={{ my: 2 }}>
-                    <Chip label={`${room.type}`} size="small" sx={{ mr: 1 }} />
-                    <Chip label={`Capacity: ${room.capacity}`} size="small" sx={{ mr: 1 }} />
-                    <Chip label={`Rating: ${room.location.rating}`} size="small" color="primary" />
-                  </Box>
-                  <Typography variant="body2" gutterBottom>
-                    {room.description}
-                  </Typography>
-                  <Box sx={{ mt: 2 }}>
-                    {room.location.hasFreeParking && (
-                      <Chip label="Free Parking" size="small" sx={{ mr: 1, mb: 1 }} />
-                    )}
-                    {room.location.hasWellnessCenter && (
-                      <Chip label="Wellness Center" size="small" sx={{ mr: 1, mb: 1 }} />
-                    )}
-                  </Box>
-                  <Typography variant="h6" sx={{ mt: 2 }}>
-                    ${room.pricePerNight} / night
-                  </Typography>
-                  {calculateNights() > 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      Total: ${getTotalPrice(room.pricePerNight)} for {calculateNights()}{' '}
-                      {calculateNights() === 1 ? 'night' : 'nights'}
-                    </Typography>
-                  )}
-                </CardContent>
-                <CardActions>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    onClick={() => handleBookRoom(room)}
-                  >
-                    Book Now
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+        {!loading && filteredLocations.length === 0 && (
+          <Card variant="glass">
+            <Card.Body>
+              <p className="empty-state">No rooms found matching your criteria.</p>
+            </Card.Body>
+          </Card>
+        )}
 
-      <Dialog open={bookingDialog} onClose={() => setBookingDialog(false)}>
-        <DialogTitle>Confirm Booking</DialogTitle>
-        <DialogContent>
-          {selectedRoom && (
-            <Box>
-              <Typography variant="body1" gutterBottom>
-                <strong>Room:</strong> {selectedRoom.name}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Hotel:</strong> {selectedRoom.location.name}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Check-in:</strong> {searchParams.checkIn}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Check-out:</strong> {searchParams.checkOut}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Guests:</strong> {searchParams.guests}
-              </Typography>
-              <Typography variant="h6" sx={{ mt: 2 }}>
-                <strong>Total Price:</strong> ${getTotalPrice(selectedRoom.pricePerNight)}
-              </Typography>
-            </Box>
+        <Modal
+          isOpen={bookingDialog}
+          onClose={() => setBookingDialog(false)}
+          title="Confirm Booking"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setBookingDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={confirmBooking}
+                loading={bookingLoading}
+                disabled={bookingLoading}
+              >
+                {bookingLoading ? 'Booking...' : 'Confirm Booking'}
+              </Button>
+            </>
+          }
+        >
+          {selectedLocation && (
+            <div className="booking-details">
+              <h4>{selectedLocation.name}</h4>
+              <p><strong>City:</strong> {selectedLocation.city}</p>
+              <p><strong>Check-in:</strong> {searchParams.checkIn}</p>
+              <p><strong>Check-out:</strong> {searchParams.checkOut}</p>
+              <p><strong>Guests:</strong> {searchParams.guests}</p>
+              <p className="total-price">
+                <strong>Total:</strong> ${selectedLocation.pricePerNight} x nights
+              </p>
+            </div>
           )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setBookingDialog(false)} disabled={bookingLoading}>
-            Cancel
-          </Button>
-          <Button onClick={handleConfirmBooking} variant="contained" disabled={bookingLoading}>
-            {bookingLoading ? 'Booking...' : 'Confirm Booking'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Modal>
+      </motion.div>
     </Container>
   );
 }

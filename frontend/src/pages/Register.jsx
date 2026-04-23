@@ -1,16 +1,10 @@
 import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import {
-  Container,
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Paper,
-  Link,
-} from '@mui/material';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
+import { Container, Button, Input, Alert, Card } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
+import './Register.css';
 
 function Register() {
   const navigate = useNavigate();
@@ -78,83 +72,97 @@ function Register() {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ mt: 8, mb: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom align="center">
-            Register
-          </Typography>
+    <div className="register-page">
+      <Container maxWidth="sm">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card variant="glass" className="register-card">
+            <Card.Body>
+              <div className="register-header">
+                <h1 className="register-title">Create Account</h1>
+                <p className="register-subtitle">Join Paradise Hotel today</p>
+              </div>
 
-          {apiError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {apiError}
-            </Alert>
-          )}
+              {apiError && (
+                <Alert type="error" onClose={() => setApiError('')}>
+                  {apiError}
+                </Alert>
+              )}
 
-          <Box component="form" onSubmit={handleSubmit} noValidate>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="name"
-              label="Full Name"
-              name="name"
-              autoComplete="name"
-              autoFocus
-              value={formData.name}
-              onChange={handleChange}
-              error={!!errors.name}
-              helperText={errors.name}
-            />
+              <form onSubmit={handleSubmit} className="register-form">
+                <Input
+                  label="Full Name"
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  error={errors.name}
+                  icon={<FaUser />}
+                  iconPosition="left"
+                  placeholder="Enter your full name"
+                  required
+                  fullWidth
+                  autoComplete="name"
+                  autoFocus
+                />
 
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={!!errors.email}
-              helperText={errors.email}
-            />
+                <Input
+                  label="Email Address"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                  icon={<FaEnvelope />}
+                  iconPosition="left"
+                  placeholder="Enter your email"
+                  required
+                  fullWidth
+                  autoComplete="email"
+                />
 
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="new-password"
-              value={formData.password}
-              onChange={handleChange}
-              error={!!errors.password}
-              helperText={errors.password}
-            />
+                <Input
+                  label="Password"
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={errors.password}
+                  helperText={!errors.password && "Must be at least 6 characters"}
+                  icon={<FaLock />}
+                  iconPosition="left"
+                  placeholder="Create a password"
+                  required
+                  fullWidth
+                  autoComplete="new-password"
+                />
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
-            >
-              {loading ? 'Registering...' : 'Register'}
-            </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  loading={loading}
+                  disabled={loading}
+                >
+                  {loading ? 'Creating Account...' : 'Create Account'}
+                </Button>
 
-            <Box sx={{ textAlign: 'center' }}>
-              <Link component={RouterLink} to="/login" variant="body2">
-                Already have an account? Login
-              </Link>
-            </Box>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
+                <p className="register-footer">
+                  Already have an account?{' '}
+                  <Link to="/login" className="register-link">
+                    Sign in here
+                  </Link>
+                </p>
+              </form>
+            </Card.Body>
+          </Card>
+        </motion.div>
+      </Container>
+    </div>
   );
 }
 

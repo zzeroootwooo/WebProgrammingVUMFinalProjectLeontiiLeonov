@@ -1,19 +1,10 @@
 import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import {
-  Container,
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Paper,
-  Link,
-  InputAdornment,
-  IconButton,
-} from '@mui/material';
-import { Visibility, VisibilityOff, Email, Lock } from '@mui/icons-material';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Container, Button, Input, Alert, Card } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
+import './Login.css';
 
 function Login() {
   const navigate = useNavigate();
@@ -75,147 +66,90 @@ function Login() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: 'calc(100vh - 70px)',
-        display: 'flex',
-        alignItems: 'center',
-        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-        py: 4,
-      }}
-    >
+    <div className="login-page">
       <Container maxWidth="sm">
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 3, sm: 5 },
-            border: '1px solid',
-            borderColor: 'divider',
-          }}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography
-              variant="h3"
-              gutterBottom
-              sx={{
-                fontWeight: 700,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Welcome Back
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Sign in to continue to Paradise Hotel
-            </Typography>
-          </Box>
+          <Card variant="glass" className="login-card">
+            <Card.Body>
+              <div className="login-header">
+                <h1 className="login-title">Welcome Back</h1>
+                <p className="login-subtitle">Sign in to continue to Paradise Hotel</p>
+              </div>
 
-          {apiError && (
-            <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
-              {apiError}
-            </Alert>
-          )}
+              {apiError && (
+                <Alert type="error" onClose={() => setApiError('')}>
+                  {apiError}
+                </Alert>
+              )}
 
-          <Box component="form" onSubmit={handleSubmit} noValidate>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={formData.email}
-              onChange={handleChange}
-              error={!!errors.email}
-              helperText={errors.email}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Email sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ mb: 2 }}
-            />
+              <form onSubmit={handleSubmit} className="login-form">
+                <Input
+                  label="Email Address"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                  icon={<FaEnvelope />}
+                  iconPosition="left"
+                  placeholder="Enter your email"
+                  required
+                  fullWidth
+                  autoComplete="email"
+                  autoFocus
+                />
 
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              id="password"
-              autoComplete="current-password"
-              value={formData.password}
-              onChange={handleChange}
-              error={!!errors.password}
-              helperText={errors.password}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ mb: 3 }}
-            />
+                <div className="password-input-wrapper">
+                  <Input
+                    label="Password"
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    error={errors.password}
+                    icon={<FaLock />}
+                    iconPosition="left"
+                    placeholder="Enter your password"
+                    required
+                    fullWidth
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              size="large"
-              disabled={loading}
-              sx={{
-                py: 1.5,
-                mb: 2,
-                fontSize: '1.05rem',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #5568d3 0%, #6a4c9c 100%)',
-                },
-              }}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
-
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                Don't have an account?{' '}
-                <Link
-                  component={RouterLink}
-                  to="/register"
-                  sx={{
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                    color: 'primary.main',
-                    '&:hover': {
-                      textDecoration: 'underline',
-                    },
-                  }}
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  loading={loading}
+                  disabled={loading}
                 >
-                  Create one now
-                </Link>
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
+                  {loading ? 'Signing in...' : 'Sign In'}
+                </Button>
+
+                <p className="login-footer">
+                  Don't have an account?{' '}
+                  <Link to="/register" className="login-link">
+                    Create one now
+                  </Link>
+                </p>
+              </form>
+            </Card.Body>
+          </Card>
+        </motion.div>
       </Container>
-    </Box>
+    </div>
   );
 }
 

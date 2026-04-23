@@ -1,0 +1,129 @@
+.admin-reservations-page {
+  padding: 2rem 0;
+}
+
+.reservations-table-wrapper {
+  margin-top: 2rem;
+}
+
+.table-container {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.reservations-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.reservations-table thead {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.reservations-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.reservations-table tbody tr {
+  border-bottom: 1px solid var(--glass-border);
+  transition: background-color 0.2s;
+}
+
+.reservations-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.reservations-table td {
+  padding: 1rem;
+  color: var(--text-secondary);
+  vertical-align: top;
+}
+
+.guest-info,
+.room-info,
+.location-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.guest-name,
+.room-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.guest-email,
+.room-type,
+.location-city {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.price-cell {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cancel-dialog-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--glass-border);
+}
+
+.cancel-dialog-details p {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.cancel-dialog-details strong {
+  color: var(--text-primary);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem 0;
+}
+
+.skeleton-title {
+  height: 40px;
+  width: 250px;
+  margin-bottom: 1rem;
+}
+
+.skeleton-card {
+  height: 200px;
+  width: 100%;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: scroll;
+  }
+
+  .reservations-table {
+    min-width: 900px;
+  }
+}

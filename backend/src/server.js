@@ -69,20 +69,30 @@ const mapRoom = (row) => ({
   },
 });
 
-const mapReservation = (row) => ({
-  id: row.id,
-  checkIn: row.checkIn,
-  checkOut: row.checkOut,
-  guests: Number(row.guests),
-  status: row.status,
-  createdAt: row.createdAt,
-  guestName: row.guestName,
-  guestEmail: row.guestEmail,
-  roomName: row.roomName,
-  roomType: row.roomType,
-  locationName: row.locationName,
-  locationCity: row.locationCity,
-});
+const mapReservation = (row) => {
+  const checkIn = new Date(row.checkIn);
+  const checkOut = new Date(row.checkOut);
+  const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+  const pricePerNight = row.pricePerNight ? Number(row.pricePerNight) : 0;
+  const totalPrice = nights * pricePerNight;
+
+  return {
+    id: row.id,
+    checkIn: row.checkIn,
+    checkOut: row.checkOut,
+    guests: Number(row.guests),
+    status: row.status,
+    createdAt: row.createdAt,
+    guestName: row.guestName,
+    guestEmail: row.guestEmail,
+    roomName: row.roomName,
+    roomType: row.roomType,
+    locationName: row.locationName,
+    locationCity: row.locationCity,
+    pricePerNight,
+    totalPrice,
+  };
+};
 
 const findLocationById = (locationId) => {
   const row = db.prepare('SELECT * FROM locations WHERE id = ?').get(locationId);
@@ -333,6 +343,7 @@ app.get('/api/reservations/me', authRequired, (request, response) => {
       res.created_at AS createdAt,
       rooms.name AS roomName,
       rooms.type AS roomType,
+      rooms.price_per_night AS pricePerNight,
       locations.name AS locationName,
       locations.city AS locationCity
     FROM reservations res
@@ -373,6 +384,7 @@ app.get('/api/admin/reservations', authRequired, adminRequired, (_request, respo
       res.created_at AS createdAt,
       rooms.name AS roomName,
       rooms.type AS roomType,
+      rooms.price_per_night AS pricePerNight,
       locations.name AS locationName,
       locations.city AS locationCity,
       users.name AS guestName,

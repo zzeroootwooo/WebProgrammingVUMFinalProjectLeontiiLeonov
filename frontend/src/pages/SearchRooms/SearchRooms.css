@@ -13,9 +13,10 @@
   padding-top: 1.8rem;
 }
 
-.search-button-wrapper {
+.search-button-container {
+  margin-top: 1.5rem;
   display: flex;
-  align-items: flex-end;
+  justify-content: center;
 }
 
 .results-grid {

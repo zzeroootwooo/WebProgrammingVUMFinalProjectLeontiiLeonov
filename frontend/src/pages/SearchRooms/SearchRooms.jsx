@@ -11,6 +11,8 @@ function SearchRooms() {
     checkIn: '',
     checkOut: '',
     guests: 1,
+    freeParking: false,
+    wellnessCenter: false,
   });
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,8 +22,11 @@ function SearchRooms() {
   const [bookingLoading, setBookingLoading] = useState(false);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setSearchParams((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setSearchParams((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
   const handleSearch = async () => {
@@ -38,6 +43,8 @@ function SearchRooms() {
           checkIn: searchParams.checkIn,
           checkOut: searchParams.checkOut,
           guests: searchParams.guests,
+          freeParking: searchParams.freeParking || undefined,
+          wellnessCenter: searchParams.wellnessCenter || undefined,
         }
       });
       setRooms(response.data.rooms || []);
@@ -132,19 +139,32 @@ function SearchRooms() {
                 fullWidth
                 min="1"
               />
-              <div className="search-button-wrapper">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  icon={<FaSearch />}
-                  onClick={handleSearch}
-                  fullWidth
-                  disabled={!searchParams.checkIn || !searchParams.checkOut}
-                >
-                  Search Rooms
-                </Button>
+              <div className="checkbox-group">
+                <Checkbox
+                  label="Free Parking"
+                  name="freeParking"
+                  checked={searchParams.freeParking}
+                  onChange={handleInputChange}
+                />
+                <Checkbox
+                  label="Wellness Center"
+                  name="wellnessCenter"
+                  checked={searchParams.wellnessCenter}
+                  onChange={handleInputChange}
+                />
               </div>
             </Grid>
+            <div className="search-button-container">
+              <Button
+                variant="primary"
+                size="lg"
+                icon={<FaSearch />}
+                onClick={handleSearch}
+                disabled={!searchParams.checkIn || !searchParams.checkOut}
+              >
+                Search Rooms
+              </Button>
+            </div>
           </Card.Body>
         </Card>
 

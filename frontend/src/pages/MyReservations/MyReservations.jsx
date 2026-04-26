@@ -99,6 +99,8 @@ function MyReservations() {
                       </Badge>
                     </div>
                     <div className="reservation-details">
+                      <p><strong>Hotel:</strong> {reservation.locationName}, {reservation.locationCity}</p>
+                      <p><strong>Room Type:</strong> {reservation.roomType}</p>
                       <p><strong>Check-in:</strong> {reservation.checkIn}</p>
                       <p><strong>Check-out:</strong> {reservation.checkOut}</p>
                       <p><strong>Guests:</strong> {reservation.guests}</p>

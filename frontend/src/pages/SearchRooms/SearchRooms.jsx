@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaSearch, FaParking, FaSpa } from 'react-icons/fa';
 import { Container, Card, Button, Input, Checkbox, Alert, Grid, Modal } from '../../components/ui';
-import api from '../../services/api';
+import { locationService } from '../../services/locationService';
 import { reservationService } from '../../services/reservationService';
 import './SearchRooms.css';
 
@@ -23,6 +23,7 @@ function SearchRooms() {
   const [bookingDialog, setBookingDialog] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -30,6 +31,7 @@ function SearchRooms() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    setValidationError('');
   };
 
   const handleSearch = async () => {
@@ -38,22 +40,33 @@ function SearchRooms() {
       return;
     }
 
+    if (new Date(searchParams.checkOut) <= new Date(searchParams.checkIn)) {
+      setValidationError('Check-out date must be later than check-in date.');
+      setRooms([]);
+      return;
+    }
+
+    if (Number(searchParams.guests) < 1) {
+      setValidationError('Guest count must be at least 1.');
+      setRooms([]);
+      return;
+    }
+
     setLoading(true);
     setError('');
+    setValidationError('');
     try {
-      const response = await api.get('/api/rooms/availability', {
-        params: {
-          checkIn: searchParams.checkIn,
-          checkOut: searchParams.checkOut,
-          guests: searchParams.guests,
-          search: searchParams.search || undefined,
-          city: searchParams.city || undefined,
-          rating: searchParams.rating || undefined,
-          freeParking: searchParams.freeParking || undefined,
-          wellnessCenter: searchParams.wellnessCenter || undefined,
-        }
+      const response = await locationService.searchRooms({
+        checkIn: searchParams.checkIn,
+        checkOut: searchParams.checkOut,
+        guests: Number(searchParams.guests),
+        search: searchParams.search || undefined,
+        city: searchParams.city || undefined,
+        rating: searchParams.rating || undefined,
+        freeParking: searchParams.freeParking || undefined,
+        wellnessCenter: searchParams.wellnessCenter || undefined,
       });
-      setRooms(response.data.rooms || []);
+      setRooms(response.rooms || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load available rooms');
       setRooms([]);
@@ -115,6 +128,12 @@ function SearchRooms() {
           </Alert>
         )}
 
+        {validationError && (
+          <Alert type="warning" onClose={() => setValidationError('')}>
+            {validationError}
+          </Alert>
+        )}
+
         <Card variant="glass" className="search-card">
           <Card.Body>
             <Grid cols={3} gap={3}>
@@ -124,6 +143,12 @@ function SearchRooms() {
                 name="checkIn"
                 value={searchParams.checkIn}
                 onChange={handleInputChange}
+                error={
+                  validationError && searchParams.checkIn && searchParams.checkOut
+                  && new Date(searchParams.checkOut) <= new Date(searchParams.checkIn)
+                    ? 'Check-in must be before check-out.'
+                    : ''
+                }
                 fullWidth
                 required
               />
@@ -133,6 +158,12 @@ function SearchRooms() {
                 name="checkOut"
                 value={searchParams.checkOut}
                 onChange={handleInputChange}
+                error={
+                  validationError && searchParams.checkIn && searchParams.checkOut
+                  && new Date(searchParams.checkOut) <= new Date(searchParams.checkIn)
+                    ? 'Must be later than check-in.'
+                    : ''
+                }
                 fullWidth
                 required
               />
@@ -142,6 +173,7 @@ function SearchRooms() {
                 name="guests"
                 value={searchParams.guests}
                 onChange={handleInputChange}
+                error={validationError && Number(searchParams.guests) < 1 ? 'Guests must be at least 1.' : ''}
                 fullWidth
                 min="1"
               />

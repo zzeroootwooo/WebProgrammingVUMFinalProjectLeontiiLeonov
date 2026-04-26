@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaHotel, FaBars, FaTimes, FaUser, FaSignOutAlt } from 'react-icons/fa';
-import { useAuth } from '../context/AuthContext';
-import { Button, Container } from './ui';
+import { useAuth } from '../../context/AuthContext';
+import { Button, Container } from '../ui';
 import './Navbar.css';
 
 function Navbar() {
@@ -23,14 +23,15 @@ function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location]);
-
   const handleLogout = () => {
     logout();
+    setMobileOpen(false);
     setUserMenuOpen(false);
     navigate('/');
+  };
+
+  const handleMobileNavigate = () => {
+    setMobileOpen(false);
   };
 
   const publicLinks = [
@@ -207,6 +208,7 @@ function Navbar() {
                     key={link.path}
                     to={link.path}
                     className={`navbar-drawer-link ${isActivePath(link.path) ? 'active' : ''}`}
+                    onClick={handleMobileNavigate}
                   >
                     {link.label}
                   </Link>
@@ -217,6 +219,7 @@ function Navbar() {
                     key={link.path}
                     to={link.path}
                     className={`navbar-drawer-link ${isActivePath(link.path) ? 'active' : ''}`}
+                    onClick={handleMobileNavigate}
                   >
                     {link.label}
                   </Link>
@@ -227,6 +230,7 @@ function Navbar() {
                     key={link.path}
                     to={link.path}
                     className={`navbar-drawer-link ${isActivePath(link.path) ? 'active' : ''}`}
+                    onClick={handleMobileNavigate}
                   >
                     {link.label}
                   </Link>
@@ -259,7 +263,10 @@ function Navbar() {
                     <Button
                       variant="outline"
                       fullWidth
-                      onClick={() => navigate('/login')}
+                      onClick={() => {
+                        setMobileOpen(false);
+                        navigate('/login');
+                      }}
                     >
                       Login
                     </Button>
@@ -267,7 +274,10 @@ function Navbar() {
                       variant="primary"
                       fullWidth
                       icon={<FaUser />}
-                      onClick={() => navigate('/register')}
+                      onClick={() => {
+                        setMobileOpen(false);
+                        navigate('/register');
+                      }}
                     >
                       Register
                     </Button>

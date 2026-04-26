@@ -8,14 +8,23 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       const token = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-
-      if (token && storedUser) {
-        setUser(JSON.parse(storedUser));
+      if (!token) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const data = await authService.getCurrentUser();
+        setUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
+      } catch {
+        authService.logout();
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
     initAuth();

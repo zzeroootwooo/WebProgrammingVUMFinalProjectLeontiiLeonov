@@ -41,37 +41,37 @@ function AdminDashboard() {
     {
       icon: <FaUsers />,
       title: 'Total Users',
-      value: stats?.totalUsers || 0,
+      value: stats?.summary?.totalUsers || 0,
       color: '#3b82f6',
     },
     {
       icon: <FaHotel />,
       title: 'Locations',
-      value: stats?.totalLocations || 0,
+      value: stats?.summary?.totalLocations || 0,
       color: '#8b5cf6',
     },
     {
       icon: <FaDoorOpen />,
       title: 'Total Rooms',
-      value: stats?.totalRooms || 0,
+      value: stats?.summary?.totalRooms || 0,
       color: '#ec4899',
     },
     {
       icon: <FaCalendarCheck />,
       title: 'Active Reservations',
-      value: stats?.activeReservations || 0,
+      value: stats?.summary?.activeReservations || 0,
       color: '#10b981',
     },
     {
       icon: <FaTimesCircle />,
       title: 'Cancelled',
-      value: stats?.cancelledReservations || 0,
+      value: stats?.summary?.cancelledReservations || 0,
       color: '#ef4444',
     },
     {
       icon: <FaChartLine />,
       title: 'Total Reservations',
-      value: stats?.totalReservations || 0,
+      value: stats?.summary?.totalReservations || 0,
       color: '#f59e0b',
     },
   ];
@@ -115,21 +115,21 @@ function AdminDashboard() {
           ))}
         </Grid>
 
-        {stats?.reservationTrend && stats.reservationTrend.length > 0 && (
+        {stats?.reservationsByMonth && stats.reservationsByMonth.length > 0 && (
           <Card variant="glass" className="trend-card">
             <Card.Header>
               <h2>Reservation Trend</h2>
             </Card.Header>
             <Card.Body>
               <div className="trend-chart">
-                {stats.reservationTrend.map((item, index) => (
+                {stats.reservationsByMonth.map((item, index) => (
                   <div key={index} className="trend-item">
                     <div className="trend-label">{item.month}</div>
                     <div className="trend-bar-container">
                       <div
                         className="trend-bar"
                         style={{
-                          width: `${(item.count / Math.max(...stats.reservationTrend.map(i => i.count))) * 100}%`,
+                          width: `${(item.count / Math.max(...stats.reservationsByMonth.map((trendItem) => trendItem.count), 1)) * 100}%`,
                         }}
                       >
                         <span className="trend-count">{item.count}</span>

@@ -1,16 +1,67 @@
-# React + Vite
+# Paradise Hotel Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React frontend for the Paradise Hotel practical project. The app integrates with the provided backend API and keeps the backend contract unchanged.
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 18+
+- npm
+- Running backend API on `http://localhost:4000` or a custom URL
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Install dependencies:
 
-## Expanding the ESLint configuration
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Build the production bundle:
+
+```bash
+npm run build
+```
+
+Run ESLint:
+
+```bash
+npm run lint
+```
+
+## Environment
+
+If the backend runs on a different URL, create `frontend/.env`:
+
+```bash
+VITE_API_BASE_URL=http://localhost:4000
+```
+
+## Project Structure
+
+- `src/pages/` application pages for guest, user, and admin flows
+- `src/components/` shared layout and routing components
+- `src/components/ui/` reusable UI primitives and their CSS files
+- `src/context/` authentication state management
+- `src/services/` API client and endpoint wrappers
+- `src/layouts/` layout shell
+- `src/assets/` static assets
+
+## Features
+
+- user registration and login
+- client-side protected routes
+- room availability search with filters
+- reservation creation and cancellation
+- user reservations page
+- admin dashboard, reservations management, and locations/rooms CRUD
+
+## Notes
+
+- The supplied backend remains the source of truth.
+- DTO field names follow the provided API contract.

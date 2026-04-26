@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash, FaHotel, FaDoorOpen } from 'react-icons/fa';
-import { Container, Card, Button, Alert, Modal, Input, Checkbox, Badge } from '../../components/ui';
+import { Container, Card, Button, Alert, Modal, Input, Checkbox, Badge, Select } from '../../components/ui';
 import api from '../../services/api';
 import './AdminLocations.css';
 
@@ -17,17 +17,16 @@ function AdminLocations() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [formData, setFormData] = useState({});
   const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      const locationsResponse = await api.get('/api/admin/locations');
+      setLocations(locationsResponse.data.locations || []);
+
       if (activeTab === 'locations') {
-        const response = await api.get('/api/admin/locations');
-        setLocations(response.data.locations || []);
+        setRooms([]);
       } else {
         const response = await api.get('/api/admin/rooms');
         setRooms(response.data.rooms || []);
@@ -37,7 +36,11 @@ function AdminLocations() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleAddLocation = () => {
     setSelectedItem(null);
@@ -51,12 +54,14 @@ function AdminLocations() {
       hasWellnessCenter: false,
       imageUrl: '',
     });
+    setFormError('');
     setLocationDialog(true);
   };
 
   const handleEditLocation = (location) => {
     setSelectedItem(location);
     setFormData({ ...location });
+    setFormError('');
     setLocationDialog(true);
   };
 
@@ -71,6 +76,7 @@ function AdminLocations() {
       description: '',
       imageUrl: '',
     });
+    setFormError('');
     setRoomDialog(true);
   };
 
@@ -85,6 +91,7 @@ function AdminLocations() {
       description: room.description,
       imageUrl: room.imageUrl || '',
     });
+    setFormError('');
     setRoomDialog(true);
   };
 
@@ -94,6 +101,17 @@ function AdminLocations() {
   };
 
   const handleSaveLocation = async () => {
+    if (!formData.name || !formData.city || !formData.address || !formData.description) {
+      setFormError('Name, city, address, and description are required.');
+      return;
+    }
+
+    if (Number(formData.rating) < 1 || Number(formData.rating) > 5) {
+      setFormError('Rating must be between 1 and 5.');
+      return;
+    }
+
+    setFormError('');
     setFormLoading(true);
     try {
       if (selectedItem) {
@@ -111,6 +129,22 @@ function AdminLocations() {
   };
 
   const handleSaveRoom = async () => {
+    if (!formData.locationId || !formData.name || !formData.type || !formData.description) {
+      setFormError('Location, room name, type, and description are required.');
+      return;
+    }
+
+    if (Number(formData.capacity) < 1) {
+      setFormError('Capacity must be at least 1.');
+      return;
+    }
+
+    if (Number(formData.pricePerNight) <= 0) {
+      setFormError('Price per night must be greater than 0.');
+      return;
+    }
+
+    setFormError('');
     setFormLoading(true);
     try {
       if (selectedItem) {
@@ -149,6 +183,7 @@ function AdminLocations() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    setFormError('');
   };
 
   return (
@@ -311,6 +346,11 @@ function AdminLocations() {
             </>
           }
         >
+          {formError && (
+            <Alert type="warning" onClose={() => setFormError('')}>
+              {formError}
+            </Alert>
+          )}
           <div className="form-grid">
             <Input
               label="Name"
@@ -402,20 +442,26 @@ function AdminLocations() {
             </>
           }
         >
+          {formError && (
+            <Alert type="warning" onClose={() => setFormError('')}>
+              {formError}
+            </Alert>
+          )}
           <div className="form-grid">
-            <div className="form-select">
-              <label>Location</label>
-              <select
-                name="locationId"
-                value={formData.locationId || ''}
-                onChange={handleInputChange}
-                className="select-input"
-              >
-                {locations.map(loc => (
-                  <option key={loc.id} value={loc.id}>{loc.name}</option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Location"
+              name="locationId"
+              value={String(formData.locationId || '')}
+              onChange={handleInputChange}
+              options={locations.map((location) => ({
+                value: String(location.id),
+                label: `${location.name} (${location.city})`,
+              }))}
+              placeholder={locations.length > 0 ? 'Select a location' : 'No locations available'}
+              disabled={locations.length === 0}
+              fullWidth
+              required
+            />
             <Input
               label="Room Name"
               name="name"

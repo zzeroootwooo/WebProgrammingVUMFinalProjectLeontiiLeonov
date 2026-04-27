@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Container, Card, Alert, Badge, Grid, Button, Modal } from '../../components/ui';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/apiError';
 import './AdminReservations.css';
 
 function AdminReservations() {
@@ -22,7 +23,7 @@ function AdminReservations() {
       const response = await api.get('/api/admin/reservations');
       setReservations(response.data.reservations || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load reservations');
+      setError(getApiErrorMessage(err, 'Failed to load reservations.'));
     } finally {
       setLoading(false);
     }
@@ -40,7 +41,7 @@ function AdminReservations() {
       setCancelDialog(false);
       fetchReservations();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to cancel reservation');
+      setError(getApiErrorMessage(err, 'Failed to cancel reservation.'));
       setCancelDialog(false);
     } finally {
       setCancelLoading(false);

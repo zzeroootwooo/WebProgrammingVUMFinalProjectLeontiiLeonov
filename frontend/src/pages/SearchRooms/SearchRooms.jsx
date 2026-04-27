@@ -4,6 +4,7 @@ import { FaSearch, FaParking, FaSpa } from 'react-icons/fa';
 import { Container, Card, Button, Input, Checkbox, Alert, Grid, Modal } from '../../components/ui';
 import { locationService } from '../../services/locationService';
 import { reservationService } from '../../services/reservationService';
+import { getApiErrorMessage } from '../../utils/apiError';
 import './SearchRooms.css';
 
 function SearchRooms() {
@@ -23,7 +24,7 @@ function SearchRooms() {
   const [bookingDialog, setBookingDialog] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [validationError, setValidationError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -31,30 +32,50 @@ function SearchRooms() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    setValidationError('');
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: '',
+    }));
+  };
+
+  const validateSearchForm = () => {
+    const errors = {};
+
+    if (!searchParams.checkIn) {
+      errors.checkIn = 'Check-in date is required.';
+    }
+    if (!searchParams.checkOut) {
+      errors.checkOut = 'Check-out date is required.';
+    }
+    if (searchParams.checkIn && searchParams.checkOut
+      && new Date(searchParams.checkOut) <= new Date(searchParams.checkIn)) {
+      errors.checkIn = 'Check-in must be before check-out.';
+      errors.checkOut = 'Must be later than check-in.';
+    }
+    if (searchParams.guests === '' || searchParams.guests === null || searchParams.guests === undefined) {
+      errors.guests = 'Guest count is required.';
+    } else if (Number(searchParams.guests) < 1) {
+      errors.guests = 'Guests must be at least 1.';
+    }
+    if (searchParams.rating !== '' && (Number(searchParams.rating) < 1 || Number(searchParams.rating) > 5)) {
+      errors.rating = 'Rating must be between 1 and 5.';
+    }
+
+    return errors;
   };
 
   const handleSearch = async () => {
-    if (!searchParams.checkIn || !searchParams.checkOut) {
-      setError('Please select check-in and check-out dates');
-      return;
-    }
-
-    if (new Date(searchParams.checkOut) <= new Date(searchParams.checkIn)) {
-      setValidationError('Check-out date must be later than check-in date.');
-      setRooms([]);
-      return;
-    }
-
-    if (Number(searchParams.guests) < 1) {
-      setValidationError('Guest count must be at least 1.');
+    const errors = validateSearchForm();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError('');
       setRooms([]);
       return;
     }
 
     setLoading(true);
     setError('');
-    setValidationError('');
+    setFieldErrors({});
     try {
       const response = await locationService.searchRooms({
         checkIn: searchParams.checkIn,
@@ -68,7 +89,7 @@ function SearchRooms() {
       });
       setRooms(response.rooms || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load available rooms');
+      setError(getApiErrorMessage(err, 'Failed to load available rooms.'));
       setRooms([]);
     } finally {
       setLoading(false);
@@ -93,7 +114,7 @@ function SearchRooms() {
       setError('');
       alert('Reservation created successfully!');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create reservation');
+      setError(getApiErrorMessage(err, 'Failed to create reservation.'));
     } finally {
       setBookingLoading(false);
     }
@@ -128,12 +149,6 @@ function SearchRooms() {
           </Alert>
         )}
 
-        {validationError && (
-          <Alert type="warning" onClose={() => setValidationError('')}>
-            {validationError}
-          </Alert>
-        )}
-
         <Card variant="glass" className="search-card">
           <Card.Body>
             <Grid cols={3} gap={3}>
@@ -143,12 +158,7 @@ function SearchRooms() {
                 name="checkIn"
                 value={searchParams.checkIn}
                 onChange={handleInputChange}
-                error={
-                  validationError && searchParams.checkIn && searchParams.checkOut
-                  && new Date(searchParams.checkOut) <= new Date(searchParams.checkIn)
-                    ? 'Check-in must be before check-out.'
-                    : ''
-                }
+                error={fieldErrors.checkIn}
                 fullWidth
                 required
               />
@@ -158,12 +168,7 @@ function SearchRooms() {
                 name="checkOut"
                 value={searchParams.checkOut}
                 onChange={handleInputChange}
-                error={
-                  validationError && searchParams.checkIn && searchParams.checkOut
-                  && new Date(searchParams.checkOut) <= new Date(searchParams.checkIn)
-                    ? 'Must be later than check-in.'
-                    : ''
-                }
+                error={fieldErrors.checkOut}
                 fullWidth
                 required
               />
@@ -173,7 +178,7 @@ function SearchRooms() {
                 name="guests"
                 value={searchParams.guests}
                 onChange={handleInputChange}
-                error={validationError && Number(searchParams.guests) < 1 ? 'Guests must be at least 1.' : ''}
+                error={fieldErrors.guests}
                 fullWidth
                 min="1"
               />
@@ -201,6 +206,7 @@ function SearchRooms() {
                 name="rating"
                 value={searchParams.rating}
                 onChange={handleInputChange}
+                error={fieldErrors.rating}
                 placeholder="e.g. 4.5"
                 fullWidth
                 min="1"
@@ -228,7 +234,7 @@ function SearchRooms() {
                 size="lg"
                 icon={<FaSearch />}
                 onClick={handleSearch}
-                disabled={!searchParams.checkIn || !searchParams.checkOut}
+                disabled={loading}
               >
                 Search Rooms
               </Button>

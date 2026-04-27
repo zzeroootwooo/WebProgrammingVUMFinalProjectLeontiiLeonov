@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash, FaHotel, FaDoorOpen } from 'react-icons/fa';
 import { Container, Card, Button, Alert, Modal, Input, Checkbox, Badge, Select } from '../../components/ui';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/apiError';
 import './AdminLocations.css';
 
 function AdminLocations() {
@@ -18,6 +19,7 @@ function AdminLocations() {
   const [formData, setFormData] = useState({});
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -32,7 +34,7 @@ function AdminLocations() {
         setRooms(response.data.rooms || []);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load data');
+      setError(getApiErrorMessage(err, 'Failed to load data.'));
     } finally {
       setLoading(false);
     }
@@ -55,6 +57,7 @@ function AdminLocations() {
       imageUrl: '',
     });
     setFormError('');
+    setValidationErrors({});
     setLocationDialog(true);
   };
 
@@ -62,6 +65,7 @@ function AdminLocations() {
     setSelectedItem(location);
     setFormData({ ...location });
     setFormError('');
+    setValidationErrors({});
     setLocationDialog(true);
   };
 
@@ -77,6 +81,7 @@ function AdminLocations() {
       imageUrl: '',
     });
     setFormError('');
+    setValidationErrors({});
     setRoomDialog(true);
   };
 
@@ -92,6 +97,7 @@ function AdminLocations() {
       imageUrl: room.imageUrl || '',
     });
     setFormError('');
+    setValidationErrors({});
     setRoomDialog(true);
   };
 
@@ -100,17 +106,68 @@ function AdminLocations() {
     setDeleteDialog(true);
   };
 
+  const validateLocationForm = () => {
+    const errors = {};
+
+    if (!formData.name?.trim()) {
+      errors.name = 'Name is required.';
+    }
+    if (!formData.city?.trim()) {
+      errors.city = 'City is required.';
+    }
+    if (!formData.address?.trim()) {
+      errors.address = 'Address is required.';
+    }
+    if (!formData.description?.trim()) {
+      errors.description = 'Description is required.';
+    }
+    if (formData.rating === '' || formData.rating === undefined || formData.rating === null) {
+      errors.rating = 'Rating is required.';
+    } else if (Number(formData.rating) < 1 || Number(formData.rating) > 5) {
+      errors.rating = 'Rating must be between 1 and 5.';
+    }
+
+    return errors;
+  };
+
+  const validateRoomForm = () => {
+    const errors = {};
+
+    if (!formData.locationId) {
+      errors.locationId = 'Location is required.';
+    }
+    if (!formData.name?.trim()) {
+      errors.name = 'Room name is required.';
+    }
+    if (!formData.type?.trim()) {
+      errors.type = 'Room type is required.';
+    }
+    if (formData.capacity === '' || formData.capacity === undefined || formData.capacity === null) {
+      errors.capacity = 'Capacity is required.';
+    } else if (Number(formData.capacity) < 1) {
+      errors.capacity = 'Capacity must be at least 1.';
+    }
+    if (formData.pricePerNight === '' || formData.pricePerNight === undefined || formData.pricePerNight === null) {
+      errors.pricePerNight = 'Price per night is required.';
+    } else if (Number(formData.pricePerNight) <= 0) {
+      errors.pricePerNight = 'Price per night must be greater than 0.';
+    }
+    if (!formData.description?.trim()) {
+      errors.description = 'Description is required.';
+    }
+
+    return errors;
+  };
+
   const handleSaveLocation = async () => {
-    if (!formData.name || !formData.city || !formData.address || !formData.description) {
-      setFormError('Name, city, address, and description are required.');
+    const errors = validateLocationForm();
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setFormError('');
       return;
     }
 
-    if (Number(formData.rating) < 1 || Number(formData.rating) > 5) {
-      setFormError('Rating must be between 1 and 5.');
-      return;
-    }
-
+    setValidationErrors({});
     setFormError('');
     setFormLoading(true);
     try {
@@ -122,28 +179,21 @@ function AdminLocations() {
       setLocationDialog(false);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save location');
+      setFormError(getApiErrorMessage(err, 'Failed to save location.'));
     } finally {
       setFormLoading(false);
     }
   };
 
   const handleSaveRoom = async () => {
-    if (!formData.locationId || !formData.name || !formData.type || !formData.description) {
-      setFormError('Location, room name, type, and description are required.');
+    const errors = validateRoomForm();
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setFormError('');
       return;
     }
 
-    if (Number(formData.capacity) < 1) {
-      setFormError('Capacity must be at least 1.');
-      return;
-    }
-
-    if (Number(formData.pricePerNight) <= 0) {
-      setFormError('Price per night must be greater than 0.');
-      return;
-    }
-
+    setValidationErrors({});
     setFormError('');
     setFormLoading(true);
     try {
@@ -155,7 +205,7 @@ function AdminLocations() {
       setRoomDialog(false);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save room');
+      setFormError(getApiErrorMessage(err, 'Failed to save room.'));
     } finally {
       setFormLoading(false);
     }
@@ -171,7 +221,7 @@ function AdminLocations() {
       setDeleteDialog(false);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete item');
+      setError(getApiErrorMessage(err, 'Failed to delete item.'));
     } finally {
       setFormLoading(false);
     }
@@ -184,6 +234,10 @@ function AdminLocations() {
       [name]: type === 'checkbox' ? checked : value
     }));
     setFormError('');
+    setValidationErrors((prev) => ({
+      ...prev,
+      [name]: '',
+    }));
   };
 
   return (
@@ -357,6 +411,7 @@ function AdminLocations() {
               name="name"
               value={formData.name || ''}
               onChange={handleInputChange}
+              error={validationErrors.name}
               fullWidth
               required
             />
@@ -365,6 +420,7 @@ function AdminLocations() {
               name="city"
               value={formData.city || ''}
               onChange={handleInputChange}
+              error={validationErrors.city}
               fullWidth
               required
             />
@@ -373,6 +429,7 @@ function AdminLocations() {
               name="address"
               value={formData.address || ''}
               onChange={handleInputChange}
+              error={validationErrors.address}
               fullWidth
               required
             />
@@ -382,6 +439,7 @@ function AdminLocations() {
               name="rating"
               value={formData.rating || ''}
               onChange={handleInputChange}
+              error={validationErrors.rating}
               min="1"
               max="5"
               step="0.1"
@@ -400,6 +458,7 @@ function AdminLocations() {
               name="description"
               value={formData.description || ''}
               onChange={handleInputChange}
+              error={validationErrors.description}
               fullWidth
               required
             />
@@ -453,6 +512,7 @@ function AdminLocations() {
               name="locationId"
               value={String(formData.locationId || '')}
               onChange={handleInputChange}
+              error={validationErrors.locationId}
               options={locations.map((location) => ({
                 value: String(location.id),
                 label: `${location.name} (${location.city})`,
@@ -467,6 +527,7 @@ function AdminLocations() {
               name="name"
               value={formData.name || ''}
               onChange={handleInputChange}
+              error={validationErrors.name}
               fullWidth
               required
             />
@@ -475,6 +536,7 @@ function AdminLocations() {
               name="type"
               value={formData.type || ''}
               onChange={handleInputChange}
+              error={validationErrors.type}
               fullWidth
               required
             />
@@ -484,6 +546,7 @@ function AdminLocations() {
               name="capacity"
               value={formData.capacity || ''}
               onChange={handleInputChange}
+              error={validationErrors.capacity}
               min="1"
               fullWidth
               required
@@ -494,6 +557,7 @@ function AdminLocations() {
               name="pricePerNight"
               value={formData.pricePerNight || ''}
               onChange={handleInputChange}
+              error={validationErrors.pricePerNight}
               min="0"
               fullWidth
               required
@@ -510,6 +574,7 @@ function AdminLocations() {
               name="description"
               value={formData.description || ''}
               onChange={handleInputChange}
+              error={validationErrors.description}
               fullWidth
               required
             />

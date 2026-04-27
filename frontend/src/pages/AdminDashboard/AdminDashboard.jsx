@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FaUsers, FaHotel, FaDoorOpen, FaCalendarCheck, FaTimesCircle, FaChartLine } from 'react-icons/fa';
 import { Container, Card, Grid, Alert } from '../../components/ui';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/apiError';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
@@ -20,7 +21,7 @@ function AdminDashboard() {
       const response = await api.get('/api/admin/dashboard');
       setStats(response.data);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load dashboard statistics');
+      setError(getApiErrorMessage(err, 'Failed to load dashboard statistics.'));
     } finally {
       setLoading(false);
     }

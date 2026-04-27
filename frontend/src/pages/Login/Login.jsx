@@ -4,11 +4,12 @@ import { motion } from 'framer-motion';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { Container, Button, Input, Alert, Card } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
+import { getApiErrorMessage } from '../../utils/apiError';
 import './Login.css';
 
 function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, authError, clearAuthError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -21,6 +22,12 @@ function Login() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (apiError) {
+      setApiError('');
+    }
+    if (authError) {
+      clearAuthError();
+    }
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -45,6 +52,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError('');
+    clearAuthError();
 
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
@@ -57,9 +65,7 @@ function Login() {
       await login(formData);
       navigate('/');
     } catch (error) {
-      setApiError(
-        error.response?.data?.message || 'Login failed. Please check your credentials.'
-      );
+      setApiError(getApiErrorMessage(error, 'Login failed. Please check your credentials.'));
     } finally {
       setLoading(false);
     }
@@ -80,9 +86,15 @@ function Login() {
                 <p className="login-subtitle">Sign in to continue to Paradise Hotel</p>
               </div>
 
-              {apiError && (
-                <Alert type="error" onClose={() => setApiError('')}>
-                  {apiError}
+              {(authError || apiError) && (
+                <Alert
+                  type="error"
+                  onClose={() => {
+                    setApiError('');
+                    clearAuthError();
+                  }}
+                >
+                  {authError || apiError}
                 </Alert>
               )}
 

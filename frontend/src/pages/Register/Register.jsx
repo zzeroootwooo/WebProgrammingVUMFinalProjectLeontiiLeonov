@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
 import { Container, Button, Input, Alert, Card } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
+import { getApiErrorMessage } from '../../utils/apiError';
 import './Register.css';
 
 function Register() {
@@ -21,6 +22,9 @@ function Register() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (apiError) {
+      setApiError('');
+    }
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -63,9 +67,7 @@ function Register() {
       await register(formData);
       navigate('/login');
     } catch (error) {
-      setApiError(
-        error.response?.data?.message || 'Registration failed. Please try again.'
-      );
+      setApiError(getApiErrorMessage(error, 'Registration failed. Please try again.'));
     } finally {
       setLoading(false);
     }
